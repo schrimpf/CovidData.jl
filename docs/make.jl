@@ -8,6 +8,7 @@ makedocs(;
     ],
     repo="https://github.com/schrimpf/CovidData.jl/blob/{commit}{path}#L{line}",
     sitename="CovidData.jl",
-    authors="Paul Schrimpf <paul.schrimpf@gmail.com>",
-    assets=String[],
-)
+    authors="Paul Schrimpf <paul.schrimpf@gmail.com>"
+         )
+
+deploydocs(repo="github.com/schrimpf/CovidData.jl.git")
