@@ -154,12 +154,14 @@ names(nyt)[names(nyt)=="deaths"]  <- "deaths.nyt"
 df$fips[df$state=="Puerto Rico"] <- 72
 # Make sure state and fips never missing
 tmp <- unique(df[!is.na(df$ST),c("fips","state","ST")])
-tmp <- merge(tmp[,c("fips","state")], aggregate( ST ~ fips, FUN=function(x) x[!is.na(x)],tmp), by="fips")
+tmp <- merge(aggregate( ST  ~ fips, FUN=function(x) unique(x[!is.na(x)])[1],tmp),
+             aggregate( state  ~ fips, FUN=function(x) unique(x[!is.na(x)])[1],tmp), by="fips", all=T)
 tmp$state[tmp$ST=="AS"]="America Somoa"
 tmp$state[tmp$ST=="GU"]="Guam"
 tmp$state[tmp$ST=="MP"]="North Marianas"
 tmp$state[tmp$ST=="PR"]="Puerto Rico"
 tmp$state[tmp$ST=="VI"]="Virgin Islands"
 covidstates <- merge(df[,!(names(df) %in% c("state","ST"))], tmp, by="fips", all.x=TRUE)
+covidstates <- merge(covidstates, nyt, by=c("date","fips","state"))
 
 write.csv(covidstates, "../data/covidstates.csv", row.names=FALSE)
