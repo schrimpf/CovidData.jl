@@ -17,16 +17,12 @@ jobs:
         os: [ubuntu-latest]
 
     steps:
-      - uses: actions/checkout@master
-      - uses: r-lib/actions/setup-r@v1
-        with:
-          r-version: '3.6.3' # The R version to download (if necessary) and use.
       - uses: actions/checkout@v1.0.0
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{ matrix.julia-version }}
       - name: Install dependencies
-        run: julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+        run: julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.build("RCall"); Pkg.instantiate();'
       - name: Build and deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
