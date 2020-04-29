@@ -1,6 +1,9 @@
-using CovidData
+using CovidData, DataFrames
 using Test
 
 @testset "CovidData.jl" begin
-    # Write your own tests here.
+  df = CovidData.covidjhudata()
+  @test isa(df, DataFrame)
+  df = CovidData.statedata()
+  @test isa(df, DataFrame)
 end

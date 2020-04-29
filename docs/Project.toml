@@ -1,2 +1,3 @@
 [deps]
+CovidData = "d602b1ce-c8e8-436d-8dfe-952725c75295"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
