@@ -17,6 +17,10 @@ jobs:
         os: [ubuntu-latest]
 
     steps:
+      - uses: actions/checkout@master
+      - uses: r-lib/actions/setup-r@v1
+        with:
+          r-version: '3.6.3' # The R version to download (if necessary) and use.
       - uses: actions/checkout@v1.0.0
       - uses: julia-actions/setup-julia@latest
         with:
