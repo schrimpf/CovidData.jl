@@ -9,7 +9,6 @@ DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-RCall = "6f49c342-dc21-5d91-9882-a32aef131414"
 WorldBankData = "2ff30676-a39f-58b2-ad74-5d1012d57b9b"
 ZipFile = "a5390f91-8eb1-5f08-bee0-b1d1ffed6cea"
 

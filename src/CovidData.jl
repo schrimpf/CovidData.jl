@@ -1,6 +1,6 @@
 module CovidData
 
-import DataFrames, CSV, ZipFile, WorldBankData, HTTP, Dates, RCall
+import DataFrames, CSV, ZipFile, WorldBankData, HTTP, Dates
 using LinearAlgebra: dot
 #using Statistics
 
@@ -163,9 +163,10 @@ function statedata(;filename="covidstates.csv")
     rfile = normpath(joinpath(dirname(Base.find_package("CovidData")),"..","R","cases_and_policies.R"))
     try
       rwd =  normpath(joinpath(dirname(Base.find_package("CovidData")),"..","R"))
-      RCall.R"setwd($rwd); source($rfile)"
+      cmd = `R -e "setwd(\"$rwd\"); source(\"$rfile\")"`
+      run(cmd)
     catch err
-      @warn "RCall encountered the following error:\n"*
+      @warn "R encountered the following error:\n"*
       err.msg*
       "\n It is likely that some R packages are missing. Try running\n"*
       "$fullpath\n in R to debug.\n\n"

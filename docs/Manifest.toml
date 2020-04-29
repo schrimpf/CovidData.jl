@@ -28,7 +28,7 @@ uuid = "8f4d0f93-b110-5947-807f-2305c1781a2d"
 version = "1.4.1"
 
 [[CovidData]]
-deps = ["CSV", "DataFrames", "Dates", "HTTP", "LinearAlgebra", "RCall", "WorldBankData", "ZipFile"]
+deps = ["CSV", "DataFrames", "Dates", "HTTP", "LinearAlgebra", "WorldBankData", "ZipFile"]
 path = "/home/paul/.julia/dev/CovidData"
 uuid = "d602b1ce-c8e8-436d-8dfe-952725c75295"
 version = "0.1.0"
