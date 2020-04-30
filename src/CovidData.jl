@@ -142,7 +142,7 @@ end
 ################################################################################
 
 """
-    statedata(;filename="covidstates.Rda")
+    statedata(;filename="covidstates.Rda", policies=:dates, fillmissingmobility=false)
 
 Loads data on US state case numbers, recoveries, deaths, policies, and
 movement. This dataset combines
@@ -153,9 +153,24 @@ movement. This dataset combines
 - Testing and hospitalizations from Covid Tracking Project
 - Operations of businesses and hourly workers from homebase
 
+The downloading and combination of datasets is done in R.
+
+Options:
+
+- `policies in [:dates, :indicators]` The downloaded policy date
+  contains the date each policy went into effect. Set to `:indicators`
+  if you want time-varying indicator variables for whether each policy
+  was in place.
+
+- `fillmissingmobility = false` should missing values from Google
+  mobility reports be filled forward and backward in time? If `true`,
+  then prior to the start of data reporting, we set google mobility
+  reports to 0, and after the most recent date report, we set them to
+  the last non-missing value.
+
 Returns a DataFrame
 """
-function statedata(;filename="covidstates.csv")
+function statedata(;filename="covidstates.csv", policies=:dates, fillmissingmobility=false)
   fullpath = normpath(joinpath(dirname(Base.find_package("CovidData")),"..","data",filename))
   mkpath(normpath(joinpath(dirname(Base.find_package("CovidData")),"..","data")))
   if !isfile(fullpath) || Dates.days(Dates.now() - Dates.unix2datetime(mtime(fullpath)))>=1
@@ -174,6 +189,58 @@ function statedata(;filename="covidstates.csv")
     end
   end
   dat = CSV.read(fullpath, missingstring="NA")
+
+  if policies==:indicators
+    @info "Creating time-varying policy indicators from policy dates."
+    pvars = [Symbol("Stay.at.home..shelter.in.place"),
+             Symbol("State.of.emergency"),
+             Symbol("Date.closed.K.12.schools"),
+             Symbol("Closed.gyms"),
+             Symbol("Closed.movie.theaters"),
+             Symbol("Closed.day.cares"),
+             Symbol("Date.banned.visitors.to.nursing.homes"),
+             Symbol("Closed.non.essential.businesses"),
+             Symbol("Closed.restaurants.except.take.out")]
+    for p in pvars
+      newp = falses(size(dat,1))
+      for st in unique(dat.state)
+        ss = dat.state .== st
+        day = unique(skipmissing(dat[ss,p]))
+        if (length(day) != 1)
+          newp[ss] .= false
+        else
+          newp[ss] .= (dat[ss, :date] .> day)
+        end
+      end
+      dat[!,p] = newp
+    end
+  elseif policies != :dates
+    @error "invalid option for policies"
+  end
+  dat = sort(dat, [:state, :date])
+  if fillmissingmobility
+
+    @info "Filling missing google mobility variables with 0's before\n"*
+    "reporting began, and their last known value for the past few days."
+
+    mvars = [:retail_and_recreation_percent_change_from_baseline,
+             :grocery_and_pharmacy_percent_change_from_baseline,
+             :parks_percent_change_from_baseline ,
+             :transit_stations_percent_change_from_baseline,
+             :workplaces_percent_change_from_baseline,
+             :residential_percent_change_from_baseline,
+             :percentchangebusinesses]
+    for v in mvars
+      i = ismissing.(dat[!,v]) .& (dat.date .<= Dates.Date("2020-03-01"))
+      dat[i, v] .= 0
+      for gdf in DataFrames.groupby(dat, :state)
+        l = findlast(.!ismissing.(gdf[!,v]))
+        lastval = (l === nothing) ? missing : gdf[l,v]
+        gdf[ismissing.(gdf[:,v]),v] .= lastval
+      end
+    end
+  end
+
   return(dat)
 end
 
