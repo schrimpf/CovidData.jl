@@ -1,6 +1,6 @@
 module CovidData
 
-import DataFrames, CSV, ZipFile, WorldBankData, HTTP, Dates
+import DataFrames, CSV, ZipFile, WorldBankData, HTTP, Dates, GZip
 using LinearAlgebra: dot
 #using Statistics
 
@@ -239,6 +239,21 @@ function statedata(;filename="covidstates.csv", policies=:dates, fillmissingmobi
         gdf[ismissing.(gdf[:,v]),v] .= lastval
       end
     end
+  end
+
+  # UNACAST social distancing measures
+  filename = "sds-v3-full-state.csv.gz"
+  fullpath = normpath(joinpath(dirname(Base.find_package("CovidData")),"..","data",filename))
+  if isfile(fullpath)
+    unacast = GZip.open(fullpath) do io
+      CSV.read(io)
+    end
+    dat = DataFrames.join(dat, unacast, on=[:fips=>:state_fips, :state=>:state_name,
+                                            :ST=>:state_code, :date=>:date])
+  else
+    @warn "Unacast social distancing scoreboard data not found\n"*
+    "Download $filename and save as $fullpath \n"*
+    "If you want Unacast social distancing variables included in data\n."
   end
 
   return(dat)
