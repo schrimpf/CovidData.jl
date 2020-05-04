@@ -192,16 +192,16 @@ function statedata(;filename="covidstates.csv", policies=:dates, fillmissingmobi
 
   if policies==:indicators
     @info "Creating time-varying policy indicators from policy dates."
-    pvars = [Symbol("Stay.at.home..shelter.in.place"),
-             Symbol("State.of.emergency"),
-             Symbol("Date.closed.K.12.schools"),
-             Symbol("Closed.gyms"),
-             Symbol("Closed.movie.theaters"),
-             Symbol("Closed.day.cares"),
-             Symbol("Date.banned.visitors.to.nursing.homes"),
-             Symbol("Closed.non.essential.businesses"),
-             Symbol("Closed.restaurants.except.take.out")]
-    for p in pvars
+    pvars = [Symbol("Stay.at.home..shelter.in.place")  Symbol("End.relax.stay.at.home.shelter.in.place");
+             Symbol("State.of.emergency") missing;
+             Symbol("Date.closed.K.12.schools") missing;
+             Symbol("Closed.gyms") Symbol("Repened.gyms");
+             Symbol("Closed.movie.theaters") Symbol("Reopened.movie.theaters");
+             Symbol("Closed.day.cares") missing;
+             Symbol("Date.banned.visitors.to.nursing.homes") missing;
+             Symbol("Closed.non.essential.businesses") Symbol("Reopen.businesses");
+             Symbol("Closed.restaurants.except.take.out") Symbol("Reopen.restaurants")]
+    for (r, p) in enumerate(pvars[:,1])
       newp = falses(size(dat,1))
       for st in unique(dat.state)
         ss = dat.state .== st
@@ -209,11 +209,18 @@ function statedata(;filename="covidstates.csv", policies=:dates, fillmissingmobi
         if (length(day) != 1)
           newp[ss] .= false
         else
-          newp[ss] .= (dat[ss, :date] .> day)
+          newp[ss] .= (dat[ss, :date] .>= day)
+        end
+        if !ismissing(pvars[r,2])
+          day = unique(skipmissing(dat[ss,pvars[r,2]]))
+          if (length(day) == 1)
+            newp[ss][dat[ss,:date] .>= day] .= false
+          end
         end
       end
       dat[!,p] = newp
     end
+
   elseif policies != :dates
     @error "invalid option for policies"
   end
@@ -245,6 +252,21 @@ function statedata(;filename="covidstates.csv", policies=:dates, fillmissingmobi
   filename = "sds-v3-full-state.csv.gz"
   fullpath = normpath(joinpath(dirname(Base.find_package("CovidData")),"..","data",filename))
   if isfile(fullpath)
+    if (Dates.days(Dates.now() - Dates.unix2datetime(mtime(fullpath)))>=1)
+      @info "Unacast data is more than 1 day old, attempting to redownload"
+      rfile = normpath(joinpath(dirname(Base.find_package("CovidData")),"..","R","unacast.R"))
+      try
+        rwd =  normpath(joinpath(dirname(Base.find_package("CovidData")),"..","R"))
+        cmd = `R -e "setwd(\"$rwd\"); source(\"$rfile\")"`
+        run(cmd)
+      catch err
+        @warn "R encountered the following error:\n"*
+        err.msg*
+        "\n It is likely that some R packages are missing. Try running\n"*
+        "$fullpath\n in R to debug.\n\n"
+        "Using old unacast data that was last modified on $(Dates.unix2datetime(mtime(fullpath)))"
+      end
+    end
     unacast = GZip.open(fullpath) do io
       CSV.read(io)
     end
@@ -252,8 +274,8 @@ function statedata(;filename="covidstates.csv", policies=:dates, fillmissingmobi
                                             :ST=>:state_code, :date=>:date])
   else
     @warn "Unacast social distancing scoreboard data not found\n"*
-    "Download $filename and save as $fullpath \n"*
-    "If you want Unacast social distancing variables included in data\n."
+    "If you want Unacast social distancing variables included in data\n."*
+    "Download $filename and save as $fullpath \n"
   end
 
   return(dat)

@@ -18,7 +18,18 @@ datecols <- c("State.of.emergency",
               "Stop.Initiation.of.Evictions.overall.or.due.to.COVID.related.issues" ,
               "Order.freezing.utility.shut.offs",
               "Froze.mortgage.payments",
-              "Waived.one.week.waiting.period.for.unemployment.insurance"
+              "Waived.one.week.waiting.period.for.unemployment.insurance",
+              "End.relax.stay.at.home.shelter.in.place",
+              "Reopen.businesses",
+              "Mandate.face.mask.use.by.all.individuals.in.public.spaces",
+              "Mandate.face.mask.use.by.employees.in.essential.businesses",
+              "Reopen.restaurants",
+              "Repened.gyms",
+              "Reopened.movie.theaters",
+              "Suspended.elective.medical.dental.procedures",
+              "Resumed.elective.medical.procedures",
+              "Modify.Medicaid.requirements.with.1135.waivers..date.of.CMS.approval.",
+              "Renter.grace.period.or.use.of.security.deposit.to.pay.rent"
               )
 for(col in datecols) {
   policies[,col]  <-  as.Date(policies[,col], format="%m/%d/%Y")
